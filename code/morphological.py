@@ -49,14 +49,25 @@ def itemize(it):
 
 def minus_dams(q, regions, footprint=np.ones((3,3), dtype=np.bool), cores=7):
 
-    with Pool(cores) as p:
-        union = lambda imgs: reduce(or_, imgs, np.zeros_like(q))
-        dialate = partial(ndimage.binary_dilation, structure=footprint, mask=q)
+    union = lambda imgs: reduce(or_, imgs, np.zeros_like(q))
+    dialate = partial(ndimage.binary_dilation, structure=footprint, mask=q)
 
-        overlap = lmap(np.zeros_like, regions)
+    overlap = lmap(np.zeros_like, regions)
 
-        while True:
-            dialation = p.map(dialate, regions)
+    while True:
+        dialation = map(dialate, regions)
+
+        for a, b in combinations(itemize(dialation), 2):
+            roi = dialation[a] & dialation[b]
+            overlap[a] |= roi
+            overlap[b] |= roi
+
+        for key in itemize(dialation):
+            regions[key] = dialation[key] & ~overlap[key]
+
+        if np.all(q == (union(regions) | union(overlap))):
+
+            dialation = map(dialate, regions)
 
             for a, b in combinations(itemize(dialation), 2):
                 roi = dialation[a] & dialation[b]
@@ -66,19 +77,7 @@ def minus_dams(q, regions, footprint=np.ones((3,3), dtype=np.bool), cores=7):
             for key in itemize(dialation):
                 regions[key] = dialation[key] & ~overlap[key]
 
-            if np.all(q == (union(regions) | union(overlap))):
-
-                dialation = p.map(dialate, regions)
-
-                for a, b in combinations(itemize(dialation), 2):
-                    roi = dialation[a] & dialation[b]
-                    overlap[a] |= roi
-                    overlap[b] |= roi
-
-                for key in itemize(dialation):
-                    regions[key] = dialation[key] & ~overlap[key]
-
-                break
+            break
 
     return regions, union(overlap)
 
