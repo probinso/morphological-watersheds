@@ -11,7 +11,6 @@ import sys
 import numpy as np
 from scipy.misc import imread, imsave
 
-
 from helpers import grayprep as prep, digest_paths, get_regions, \
     list_regions, lmap, ndimage, label2rgb
 
@@ -115,17 +114,13 @@ def watershed(Z, n):
 
 def interface(inpath, outpath, cap):
 
-    raw = imread(inpath)
-
     signature = digest_paths(inpath)
-
-    processed = prep(raw).astype(np.uint32)
-
-    data = watershed(processed, cap)
-
     dst = osp.join(outpath, signature)
     os.makedirs(dst, exist_ok=True)
 
+    raw = imread(inpath)
+    processed = prep(raw).astype(np.uint32)
+    data = watershed(processed, cap)
 
     print(np.unique(data[-1]))
     for i, regions in enumerate(data):
