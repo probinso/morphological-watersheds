@@ -82,14 +82,10 @@ def minus_dams(q, regions, footprint=np.ones((3,3), dtype=np.bool), cores=7):
 
 
 def watershed(Z, n):
-    li = list()
-    li.append(np.zeros_like(Z))
+    retval = np.zeros_like(Z)
 
     for i in range(n):
-        print(i)
-
-        prior = li[-1]
-        retval = np.copy(prior)
+        prior = np.copy(retval)
 
         regions, total = Q(Z, i)
         for q in (regions == i for i in range(1, total+1)):
@@ -108,8 +104,7 @@ def watershed(Z, n):
                     idx = np.where(g)
                     retval[idx] = np.max(retval[idx])
 
-        li.append(retval)
-    return li
+        yield retval
 
 
 def interface(inpath, outpath, cap):
