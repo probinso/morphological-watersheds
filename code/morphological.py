@@ -54,7 +54,7 @@ def minus_dams(q, regions, footprint=np.ones((3,3), dtype=np.bool), cores=7):
     overlap = lmap(np.zeros_like, regions)
 
     while True:
-        dialation = map(dialate, regions)
+        dialation = lmap(dialate, regions)
 
         for a, b in combinations(itemize(dialation), 2):
             roi = dialation[a] & dialation[b]
@@ -66,7 +66,7 @@ def minus_dams(q, regions, footprint=np.ones((3,3), dtype=np.bool), cores=7):
 
         if np.all(q == (union(regions) | union(overlap))):
 
-            dialation = map(dialate, regions)
+            dialation = lmap(dialate, regions)
 
             for a, b in combinations(itemize(dialation), 2):
                 roi = dialation[a] & dialation[b]
