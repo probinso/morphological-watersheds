@@ -4,16 +4,17 @@ from functools import reduce, partial
 import hashlib
 
 import numpy as np
-from scipy import ndimage as ndimage
+from scipy import ndimage as ndi
 from scipy.ndimage.filters import minimum_filter, gaussian_filter
 
 from skimage.color import label2rgb
+from skimage.util import invert
 
 def compose(*funcs):
     return reduce(lambda g, h: lambda x: g(h(x)),
                   funcs, lambda x: x)
 
-get_regions = ndimage.label
+get_regions = ndi.label
 
 def local_minima_regions(V, shape=(30,30)):
     footprint = np.ones(shape)
@@ -55,14 +56,13 @@ def channel_op(img, op=lambda x: x):
     x, y, c = img.shape
     return np.dstack(map(op, (img[:, :, i] for i in range(c))))
 
-
 makegray = partial(np.mean, axis=2)
-
 takemin = partial(np.max, axis=2)
-smooth = lambda img: gaussian_filter(img, 3)
-invert = lambda img: np.max(img) - img
+
+smooth = lambda s: lambda img: gaussian_filter(img, s)
+invert = invert # lambda img: np.max(img) - img
 
 chsmooth = partial(channel_op, op=smooth)
 
 minprep = compose(invert, takemin, chsmooth)
-grayprep = compose(invert, smooth, makegray)
+grayprep = compose(invert, smooth(3), makegray)

@@ -12,11 +12,11 @@ import numpy as np
 from scipy.misc import imread, imsave
 
 from helpers import grayprep as prep, digest_paths, get_regions, \
-    list_regions, lmap, ndimage, label2rgb
+    list_regions, lmap, ndi, label2rgb
 
 
-def T(G, n):
-    return G < n
+def T(G, n, mask):
+    return (G < n) #& mask
 
 
 def Cn_Mi(G, n, M):
@@ -37,8 +37,8 @@ def C(G, n, Minima):
     return reduce(or_, pools, np.zeros_like(G))
 
 
-def Q(G, n):
-    return get_regions(T(G, n))
+def Q(G, n, mask):
+    return get_regions(T(G, n, mask))
 
 
 def itemize(it):
@@ -49,7 +49,7 @@ def itemize(it):
 def minus_dams(q, regions, footprint=np.ones((3,3), dtype=np.bool), cores=7):
 
     union = lambda imgs: reduce(or_, imgs, np.zeros_like(q))
-    dialate = partial(ndimage.binary_dilation, structure=footprint, mask=q)
+    dialate = partial(ndi.binary_dilation, structure=footprint, mask=q)
 
     overlap = lmap(np.zeros_like, regions)
 
@@ -81,13 +81,16 @@ def minus_dams(q, regions, footprint=np.ones((3,3), dtype=np.bool), cores=7):
     return regions, union(overlap)
 
 
-def watershed(Z, n):
+def watershed(Z, n, mask=None):
+
     retval = np.zeros_like(Z)
+    if mask is None:
+        mask = np.ones_like(Z, dtype='bool')
 
     for i in range(n):
         prior = np.copy(retval)
 
-        regions, total = Q(Z, i)
+        regions, total = Q(Z, i, mask)
         for q in (regions == i for i in range(1, total+1)):
             intersection = q & (prior > 0)
             collections, count = get_regions(intersection)
