@@ -16,7 +16,7 @@ from helpers import grayprep as prep, digest_paths, get_regions, \
 
 
 def T(G, n, mask):
-    return (G < n) #& mask
+    return (G < n) & mask
 
 
 def Cn_Mi(G, n, M):
@@ -102,6 +102,7 @@ def watershed(Z, n, mask=None):
                 retval[idx] = np.max(retval[idx])
             else: # count > 1
                 grows, e = minus_dams(q, list_regions(intersection))
+                #print(Z.dtype)
                 Z[np.where(e)] = np.iinfo(Z.dtype).max
                 for g in (g for g in grows if np.any(g)):
                     idx = np.where(g)
@@ -118,7 +119,7 @@ def interface(inpath, outpath, cap):
 
     raw = imread(inpath)
     processed = prep(raw).astype(np.uint32)
-    data = watershed(processed, cap)
+    data = watershed(processed, cap, np.zeros_like(processed, dtype='bool'))
 
     print(np.unique(data[-1]))
     for i, regions in enumerate(data):
