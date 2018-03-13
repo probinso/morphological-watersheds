@@ -125,7 +125,7 @@ def interface(inpath, outpath, cap):
     for i, regions in enumerate(data):
         result = np.copy(raw)
         result = label2rgb(regions, image=result, bg_label=0)
-        imsave(osp.join(dst, f'img-{str.zfill(str(i),3)}.png'), result)
+        imsave(osp.join(dst, 'img-{}.png'.format(str.zfill(str(i),3))), result)
 
     np.save(osp.join(dst, 'raw.npy'), raw)
     np.save(osp.join(dst, 'reg.npy'), data[-1])
